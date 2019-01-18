@@ -1,5 +1,5 @@
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `1_curCustomer`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `a_curCustomer`()
 begin
     declare done int default false;
     declare aux_id_dim_customer int;
@@ -45,7 +45,7 @@ end$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `2_curEmployee`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `b_curEmployee`()
 begin
 	declare done int default false;
     declare aux_id int;
@@ -90,7 +90,7 @@ end$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `3_curProducts`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `c_curProducts`()
 begin
     declare done int default false;
     declare aux_id_dim_products int;
@@ -132,7 +132,7 @@ begin
 end$$
 DELIMITER ;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `4_curShipper`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `d_curShipper`()
 begin
 	declare done int default false;
     declare aux_id_dim_shipper int;
@@ -178,7 +178,7 @@ end$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `5_curSupplier`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `e_curSupplier`()
 begin
 	declare done int default false;
     declare aux_id int;
@@ -223,7 +223,7 @@ end$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `6_inc_datas`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `f_inc_datas`()
 BEGIN
 
 SET @startDate = (SELECT LEAST( MIN(order_date), MIN(shipped_date), MIN(paid_date),
@@ -272,7 +272,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `7_dim_time_st`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `g_dim_time_st`()
 BEGIN
 INSERT INTO trabalho.dim_time(month,year,date,dayofweek,season)
 VALUES("N/A","N/A", '0000-00-00',"N/A","N/A");
@@ -283,7 +283,7 @@ DELIMITER ;
 
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `8_sp_order_facts`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `h_sp_order_facts`()
 BEGIN
     
 DECLARE done INT DEFAULT FALSE;
@@ -347,7 +347,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `9_sp_purchase_facts`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `i_sp_purchase_facts`()
 BEGIN
 	DECLARE done INT DEFAULT FALSE;
     DECLARE am decimal(19,4);
