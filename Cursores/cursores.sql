@@ -1,5 +1,5 @@
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `curCustomer`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `1_curCustomer`()
 begin
     declare done int default false;
     declare aux_id_dim_customer int;
@@ -12,25 +12,27 @@ begin
     declare cur cursor for select distinct id,company,concat(first_name,' ',last_name) as first_name_last_name,job_title,city,state_province,country_region from northwind.customers;
     declare continue handler for not found set done=true;
     open cur;
+	insert into trabalho.dim_customer(id_dim_customer,company,first_name_last_name,job_title,city,state_province,country_region) 
+    values(0,"N\A","N\A","N\A","N\A","N\A","N\A");
     readloop: loop
     fetch cur into aux_id_dim_customer,aux_company,aux_first_name_last_name,aux_job_title,aux_city,aux_state_province,aux_country_region;
     if aux_company is null then
-        set aux_company = "Não tem";
+        set aux_company = "N/A";
     end if;
     if aux_first_name_last_name is null then
-        set aux_first_name_last_name = "Não tem";
+        set aux_first_name_last_name = "N/A";
     end if;
     if aux_job_title is null then
-        set aux_job_title = "Não tem";
+        set aux_job_title = "N/A";
     end if;
     if aux_city is null then
-        set aux_city = "Não tem";
+        set aux_city = "N/A";
     end if;
     if aux_state_province is null then
-        set aux_state_province = "Não tem";
+        set aux_state_province = "N/A";
     end if;
     if aux_country_region is null then
-        set aux_country_region = "Não tem";
+        set aux_country_region = "N/A";
     end if;
     if done then
         leave readloop;
@@ -43,7 +45,7 @@ end$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `curEmployee`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `2_curEmployee`()
 begin
 	declare done int default false;
     declare aux_id int;
@@ -56,25 +58,27 @@ begin
     declare cur cursor for select distinct id,company,concat(first_name,' ',last_name) as first_name_last_name, job_title, city, state_province, country_region from northwind.employees;
     declare continue handler for not found set done=true;
     open cur;
+    insert into trabalho.dim_employee(id_dim_employer,company,first_name_last_name,job_title,city,state_province,country_region) 
+    values(0,"N\A","N\A","N\A","N\A","N\A","N\A");
     readloop: loop
     fetch cur into aux_id,aux_company,aux_name,aux_job_title,aux_city,aux_state_province,aux_country_region;
     if aux_company is null then
-		set aux_company = "Não tem";
+		set aux_company = "N/A";
     end if;
     if aux_name is null then
-		set aux_name = "Não tem";
+		set aux_name = "N/A";
     end if;
     if aux_job_title is null then
-		set aux_job_title = "Não tem";
+		set aux_job_title = "N/A";
     end if;
 	if aux_city is null then
-		set aux_city = "Não tem";
+		set aux_city = "N/A";
     end if;
 	if aux_state_province is null then
-		set aux_state_province = "Não tem";
+		set aux_state_province = "N/A";
     end if;
 	if aux_country_region is null then
-		set aux_country_region = "Não tem";
+		set aux_country_region = "N/A";
     end if;
     if done then
 		leave readloop;
@@ -86,7 +90,7 @@ end$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `curProducts`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `3_curProducts`()
 begin
     declare done int default false;
     declare aux_id_dim_products int;
@@ -99,22 +103,24 @@ begin
     declare cur cursor for select distinct id,product_name,standard_cost,list_price,quantity_per_unit,discontinued,category from northwind.products;
     declare continue handler for not found set done=true;
     open cur;
+    insert into trabalho.dim_products(id_dim_products,name,standard_cost,list_price,quantity_per_unit,discontinued,category) 
+    values(0,"N\A",-1.0,-1.0,-1.0,0,"N\A");
     readloop: loop
     fetch cur into aux_id_dim_products,aux_name,aux_standard_cost,aux_list_price,aux_quantity_per_unit,aux_discontinued,aux_category;
     if aux_name is null then
-        set aux_name = "Não tem";
+        set aux_name = "N/A";
     end if;
 	if aux_name is null then
-        set aux_name = "Não tem";
+        set aux_name = "N/A";
     end if;
     if aux_standard_cost is null then
-        set aux_standard_cost = "Não tem";
+        set aux_standard_cost = "N/A";
     end if;
     if aux_quantity_per_unit is null then
-        set aux_quantity_per_unit = "Não tem";
+        set aux_quantity_per_unit = "N/A";
     end if;
     if aux_category is null then
-        set aux_category = "Não tem";
+        set aux_category = "N/A";
     end if;
     if done then
         leave readloop;
@@ -125,9 +131,8 @@ begin
     close cur;
 end$$
 DELIMITER ;
-
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `curShipper`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `4_curShipper`()
 begin
 	declare done int default false;
     declare aux_id_dim_shipper int;
@@ -140,25 +145,27 @@ begin
     declare cur cursor for select distinct id,company,concat(first_name,' ',last_name) as first_name_last_name,job_title,city,state_province,country_region from northwind.shippers;
     declare continue handler for not found set done=true;
     open cur;
+    insert into trabalho.dim_shipper(id_dim_shipper,company,first_name_last_name,job_title,city,state_province,country_region) 
+    values(0,"N\A","N\A","N\A","N\A","N\A","N\A");
     readloop: loop
     fetch cur into aux_id_dim_shipper,aux_company,aux_first_name_last_name,aux_job_title,aux_city,aux_state_province,aux_country_region;
     if aux_company is null then
-        set aux_company = "Não tem";
+        set aux_company = "N\A";
     end if;
     if aux_first_name_last_name is null then
-		set aux_first_name_last_name = "Não tem";
+		set aux_first_name_last_name = "N\A";
     end if;
     if aux_job_title is null then
-		set aux_job_title = "Não tem";
+		set aux_job_title = "N\A";
     end if;
 	if aux_city is null then
-		set aux_city = "Não tem";
+		set aux_city = "N\A";
     end if;
 	if aux_state_province is null then
-		set aux_state_province = "Não tem";
+		set aux_state_province = "N\A";
     end if;
 	if aux_country_region is null then
-		set aux_country_region = "Não tem";
+		set aux_country_region = "N\A";
     end if;
     if done then
 		leave readloop;
@@ -171,7 +178,7 @@ end$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `curSupplier`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `5_curSupplier`()
 begin
 	declare done int default false;
     declare aux_id int;
@@ -184,25 +191,27 @@ begin
     declare cur cursor for select distinct id,company,concat(first_name,' ',last_name) as first_name_last_name, job_title, city, state_province, country_region from northwind.suppliers;
     declare continue handler for not found set done=true;
     open cur;
+    insert into trabalho.dim_supplier(id_dim_supplier,company,first_name_last_name,job_title,city,state_province,country_region) 
+    values(0,"N\A","N\A","N\A","N\A","N\A","N\A");
     readloop: loop
     fetch cur into aux_id,aux_company,aux_name,aux_job_title,aux_city,aux_state_province,aux_country_region;
     if aux_company is null then
-		set aux_company = "Não tem";
+		set aux_company = "N\A";
     end if;
     if aux_name is null then
-		set aux_name = "Não tem";
+		set aux_name = "N\A";
     end if;
     if aux_job_title is null then
-		set aux_job_title = "Não tem";
+		set aux_job_title = "N\A";
     end if;
 	if aux_city is null then
-		set aux_city = "Não tem";
+		set aux_city = "N\A";
     end if;
 	if aux_state_province is null then
-		set aux_state_province = "Não tem";
+		set aux_state_province = "N\A";
     end if;
 	if aux_country_region is null then
-		set aux_country_region = "Não tem";
+		set aux_country_region = "N\A";
     end if;
     if done then
 		leave readloop;
@@ -214,7 +223,7 @@ end$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `inc_datas`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `6_inc_datas`()
 BEGIN
 
 SET @startDate = (SELECT LEAST( MIN(order_date), MIN(shipped_date), MIN(paid_date),
@@ -263,7 +272,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `dim_time_st`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `7_dim_time_st`()
 BEGIN
 INSERT INTO trabalho.dim_time(month,year,date,dayofweek,season)
 VALUES("N/A","N/A", '0000-00-00',"N/A","N/A");
@@ -272,8 +281,9 @@ SELECT mes,ano,data,`dia_da_semana`,estacao FROM `trabalho-ar`.`pre_dim_time`;
 END$$
 DELIMITER ;
 
+
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_order_facts`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `8_sp_order_facts`()
 BEGIN
     
 DECLARE done INT DEFAULT FALSE;
@@ -281,7 +291,7 @@ DECLARE done INT DEFAULT FALSE;
     DECLARE qt decimal(18,4);
     DECLARE od, pd, sd DATETIME;
     DECLARE idP, idC, idS, idT, idE INT;
-    DECLARE curG CURSOR FOR SELECT DISTINCT  unit_price, quantity, order_date, shipped_date, paid_date, id_dim_products, id_dim_customer,
+    DECLARE curG CURSOR FOR SELECT DISTINCT unit_price, quantity, order_date, shipped_date, paid_date, id_dim_products, id_dim_customer,
 									id_dim_shipper,id_dim_employer
 							FROM northwind.orders AS O
                             INNER JOIN northwind.order_details AS OD
@@ -294,6 +304,7 @@ DECLARE done INT DEFAULT FALSE;
                             ON OD.product_id = DP.id_dim_products
                             INNER JOIN trabalho.dim_shipper AS DS
                             ON O.shipper_id = DS.id_dim_shipper;
+declare continue handler for not found set done=true;
 OPEN curG;
 
     
@@ -336,7 +347,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_purchase_facts`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `9_sp_purchase_facts`()
 BEGIN
 	DECLARE done INT DEFAULT FALSE;
     DECLARE am decimal(19,4);
@@ -353,7 +364,7 @@ BEGIN
                             ON PO.created_by = DE.id_dim_employer
                             INNER JOIN trabalho.dim_supplier AS DS
                             ON PO.supplier_id = DS.id_dim_supplier;
-                            
+declare continue handler for not found set done=true;
 OPEN curG;
 
     
@@ -400,5 +411,4 @@ OPEN curG;
     CLOSE curG;
 END$$
 DELIMITER ;
-
 
