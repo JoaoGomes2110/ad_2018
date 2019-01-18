@@ -412,3 +412,29 @@ OPEN curG;
 END$$
 DELIMITER ;
 
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `inc_datas_trigger`(startDate DATETIME, endDate DATETIME)
+BEGIN
+	while @startDate<=@endDate DO
+		SET @m = (SELECT MONTH(@startDate));
+		SET @ano = (SELECT YEAR(@startDate));
+		SET @mes = concat(@m,"-",@ano);
+		SET @dia = dayname(@startDate);
+		select 
+		CASE WHEN MONTH(@startDate) IN (3,4,5) THEN "SPRING"
+			WHEN MONTH(@startDate) IN (6,7,8) THEN "SUMMER"
+			WHEN MONTH(@startDate) IN (9,10,11) THEN "AUTUMN"
+			ELSE "WINTER"
+			END
+		INTO @est;
+		INSERT INTO `trabalho-ar`.pre_dim_time(mes,ano,data,`dia_da_semana`,estacao)
+		VALUES(@mes,@ano,@startDate,@dia,@est);
+		
+		SET @startDate = DATE_ADD(@startDate, INTERVAL 1 DAY);
+	END WHILE;
+
+	INSERT INTO `trabalho-ar`.pre_dim_time(mes,ano,data,`dia_da_semana`,estacao)
+	VALUES(@mes,@ano,@startDate,@dia,@est);
+END$$
+DELIMITER ;
+
