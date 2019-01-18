@@ -104,30 +104,29 @@ FOR EACH ROW
 	END$$
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS trigger_pre_order;
+DROP TRIGGER IF EXISTS trigger_aud_pre_order;
 DELIMITER $$
-CREATE TRIGGER trigger_aud_pre_order
-AFTER INSERT ON `trabalho-ar`.pre_order_facts
-FOR EACH ROW
-	BEGIN
+CREATE  TRIGGER trigger_aud_pre_order 
+	AFTER INSERT ON pre_order_facts 
+    FOR EACH ROW BEGIN
     DECLARE last_id INT;
     IF(new.operation like 'INSERT') THEN
 		INSERT INTO trabalho.orders_fact
-		VALUES(new.idpre_order_facts,new.unit_price,new.quantity,new.order_date,
+		VALUES(default,new.unit_price,new.quantity,new.order_date,
         new.paid_date,new.shipped_date,new.id_dim_customer,new.id_dim_products,
         new.id_dim_shipper,new.id_dim_employer);
 	END IF;
     IF(new.operation like 'UPDATE') THEN
 		SET last_id = (SELECT id_orders_fact+1 FROM trabalho.orders_fact ORDER BY id_orders_fact DESC LIMIT 1);
 		INSERT INTO trabalho.orders_fact
-		VALUES(new.idpre_order_facts,new.unit_price,new.quantity,new.order_date,
+		VALUES(last_id,new.unit_price,new.quantity,new.order_date,
         new.paid_date,new.shipped_date,new.id_dim_customer,new.id_dim_products,
         new.id_dim_shipper,new.id_dim_employer);
 	END IF;
 	END$$
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS trigger_pre_purchase;
+DROP TRIGGER IF EXISTS trigger_aud_pre_purchase;
 DELIMITER $$
 CREATE TRIGGER trigger_aud_pre_purchase
 AFTER INSERT ON `trabalho-ar`.pre_purchase_facts
@@ -136,9 +135,9 @@ FOR EACH ROW
     DECLARE last_id INT;
     IF(new.operation like 'INSERT') THEN
 		INSERT INTO trabalho.purchase_order_fact
-		VALUES(new.idpre_order_facts,new.unit_cost,new.quantity,new.submitted_date,
+		VALUES(default,new.unit_cost,new.submitted_date,
         new.payment_date,new.created_date,new.approved_date,new.id_dim_products,
-        new.id_dim_employer,new.id_dim_supplier);
+        new.id_dim_employer,new.id_dim_supplier,new.quantity);
 	END IF;
     IF(new.operation like 'UPDATE') THEN
 		SET last_id = (SELECT id_purchase_order_fact+1 FROM trabalho.purchase_order_fact ORDER BY id_purchase_order_fact DESC LIMIT 1);
