@@ -167,6 +167,11 @@ FOR EACH ROW
     DECLARE od,pd,sd,idc,idp,ids,ide INT;
     DECLARE op VARCHAR(50);
     DECLARE up,qt DECIMAL(18,4);
+    DECLARE newDate, last_date DATETIME;
+    SET newDate = (SELECT GREATEST(new.order_date,new.paid_date,new.shipped_date));
+    SET last_date = (SELECT max(data) FROM pre_dim_time);
+    IF(newDate>last_date) THEN CALL `trabalho-ar`.inc_datas_trigger(newDate,last_date);
+    END IF;
     SET op = 'INSERT',
 		up= (SELECT OFC.unit_cost FROM northwind.order_details AS OFC
 						WHERE OFC.order_id = new.id),
@@ -177,7 +182,7 @@ FOR EACH ROW
 		pd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
 					  WHERE DT.date = new.paid_date),
 		sd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.order_date),
+					  WHERE DT.date = new.shipped_date),
 		idc = new.customer_id,
         idp = (SELECT OFC.product_id FROM northwind.order_details AS OFC
 							WHERE OFC.order_id = new.id),
@@ -217,6 +222,11 @@ FOR EACH ROW
     DECLARE sd,pd,cd,ad,idp,ide,ids INT;
     DECLARE op VARCHAR(50);
     DECLARE up,qt DECIMAL(18,4);
+    DECLARE newDate, last_date DATETIME;
+    SET newDate = (SELECT GREATEST(new.submitted_date,new.payment_date,new.creation_date,new.approved_date));
+    SET last_date = (SELECT max(data) FROM pre_dim_time);
+    IF(newDate>last_date) THEN CALL `trabalho-ar`.inc_datas_trigger(newDate,last_date);
+    END IF;
     SET op = 'INSERT',
 		up= (SELECT OFC.unit_cost FROM northwind.purchase_orders_detais AS OFC
 						WHERE OFC.purchase_order_id = new.id),
@@ -259,3 +269,30 @@ FOR EACH ROW
     VALUES(up,qt,sd,pd,cd,ad,idp,ide,ids);
 	END$$
 DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `inc_datas_trigger`(startDate DATETIME, endDate DATETIME)
+BEGIN
+	while @startDate<=@endDate DO
+		SET @m = (SELECT MONTH(@startDate));
+		SET @ano = (SELECT YEAR(@startDate));
+		SET @mes = concat(@m,"-",@ano);
+		SET @dia = dayname(@startDate);
+		select 
+		CASE WHEN MONTH(@startDate) IN (3,4,5) THEN "SPRING"
+			WHEN MONTH(@startDate) IN (6,7,8) THEN "SUMMER"
+			WHEN MONTH(@startDate) IN (9,10,11) THEN "AUTUMN"
+			ELSE "WINTER"
+			END
+		INTO @est;
+		INSERT INTO `trabalho-ar`.pre_dim_time(mes,ano,data,`dia_da_semana`,estacao)
+		VALUES(@mes,@ano,@startDate,@dia,@est);
+		
+		SET @startDate = DATE_ADD(@startDate, INTERVAL 1 DAY);
+	END WHILE;
+
+	INSERT INTO `trabalho-ar`.pre_dim_time(mes,ano,data,`dia_da_semana`,estacao)
+	VALUES(@mes,@ano,@startDate,@dia,@est);
+END$$
+DELIMITER ;
+
