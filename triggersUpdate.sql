@@ -162,29 +162,45 @@ DELIMITER ;
 DROP TRIGGER IF EXISTS trigger_update_orders;
 DELIMITER $$
 CREATE TRIGGER trigger_update_orders
-AFTER UPDATE ON `northwind`.orders
+AFTER UPDATE ON `northwind`.order_details
 FOR EACH ROW
 	BEGIN
     DECLARE od,pd,sd,idc,idp,ids,ide INT;
     DECLARE op VARCHAR(50);
     DECLARE up,qt DECIMAL(18,4);
+    DECLARE newDate, last_date, nod,npd,nsd DATETIME;
+    SET nod = (SELECT O.order_date FROM northwind.orders AS O
+				WHERE new.order_id = O.id);
+	SET npd = (SELECT O.paid_date FROM northwind.orders AS O
+				WHERE new.order_id = O.id);
+	SET nsd = (SELECT O.shipped_date FROM northwind.orders AS O
+				WHERE new.order_id = O.id);
+    SET newDate = (SELECT GREATEST(nod,npd,nsd));
+    SET last_date = (SELECT max(data) FROM `trabalho-ar`.pre_dim_time);
+    IF(newDate>last_date) THEN CALL `trabalho-ar`.inc_datas_trigger(newDate,last_date);
+    END IF;
     SET op = 'UPDATE',
-		up= (SELECT OFC.unit_price FROM northwind.order_details AS OFC
-						WHERE OFC.order_id = new.id),
-        qt = (SELECT OFC.quantity FROM northwind.order_details AS OFC
-                    WHERE OFC.order_id = new.id),
+		up= new.unit_price,
+        qt = new.quantity,
 		od = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.order_date),
+					  WHERE DT.date = (SELECT O.order_date FROM northwind.orders AS O
+										WHERE new.order_id = O.id)),
 		pd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.paid_date),
+					  WHERE DT.date = (SELECT O.paid_date FROM northwind.orders AS O
+										WHERE new.order_id = O.id)),
 		sd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.order_date),
-		idc = new.customer_id,
-        idp = (SELECT OFC.product_id FROM northwind.order_details AS OFC
-							WHERE OFC.order_id = new.id),
-		ids = new.shipper_id,
-        ide = new.employee_id;
+					  WHERE DT.date = (SELECT O.shipped_date FROM northwind.orders AS O
+										WHERE new.order_id = O.id)),
+		idc = (SELECT O.customer_id FROM northwind.orders AS O
+										WHERE new.order_id = O.id),
+        idp = new.product_id,
+		ids = (SELECT O.shipper_id FROM northwind.orders AS O
+										WHERE new.order_id = O.id),
+        ide = (SELECT O.employee_id FROM northwind.orders AS O
+										WHERE new.order_id = O.id);
         IF(up is null) THEN SET up = -1.0; 
+        END IF;
+        IF(qt is null) THEN SET up = -1.0; 
         END IF;
         IF(od is null) THEN SET od = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
 										where DT.date = '0000-00-00'); 
@@ -203,38 +219,54 @@ FOR EACH ROW
         END IF;
         IF(ide is null) THEN SET ide = 0; 
         END IF;
-        
-	INSERT INTO `trabalho-ar`.pre_order_facts
-    VALUES(up,qt,od,pd,sd,idc,idp,ids,ide);
+	INSERT INTO `trabalho-ar`.pre_order_facts(unit_price,quantity,order_date,paid_date,shipped_date,id_dim_customer,
+    id_dim_products,id_dim_shipper,id_dim_employer,operation)
+    VALUES(up,qt,od,pd,sd,idc,idp,ids,ide,op);
 	END$$
 DELIMITER ;
 
 DROP TRIGGER IF EXISTS trigger_update_purchase;
 DELIMITER $$
 CREATE TRIGGER trigger_update_purchase
-AFTER UPDATE ON `northwind`.purchase_orders
+AFTER UPDATE ON `northwind`.purchase_order_details
 FOR EACH ROW
 	BEGIN
     DECLARE sd,pd,cd,ad,idp,ide,ids INT;
     DECLARE op VARCHAR(50);
     DECLARE up,qt DECIMAL(18,4);
+    DECLARE newDate, last_date,nsd,npd,ncd,nad DATETIME;
+    SET nsd = (SELECT p.submitted_date FROM northwind.purchase_orders AS p
+				WHERE new.purchase_order_id = p.id);
+	SET npd = (SELECT p.payment_date FROM northwind.purchase_orders AS p
+				WHERE new.purchase_order_id = p.id);
+	SET ncd = (SELECT p.creation_date FROM northwind.purchase_orders AS p
+				WHERE new.purchase_order_id = p.id);
+	SET nad = (SELECT p.approved_date FROM northwind.purchase_orders AS p
+				WHERE new.purchase_order_id = p.id);
+    SET newDate = (SELECT GREATEST(nsd,npd,ncd,nad));
+    SET last_date = (SELECT max(data) FROM `trabalho-ar`.pre_dim_time);
+    IF(newDate>last_date) THEN CALL `trabalho-ar`.inc_datas_trigger(newDate,last_date);
+    END IF;
     SET op = 'UPDATE',
-		up= (SELECT OFC.unit_cost FROM northwind.purchase_orders_details AS OFC
-						WHERE OFC.purchase_order_id = new.id),
-        qt = (SELECT OFC.quantity FROM northwind.purchase_orders_details AS OFC
-                    WHERE OFC.purchase_order_id = new.id),
+		up= new.unit_cost,
+        qt = new.quantity,
 		sd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.submitted_date),
+					  WHERE DT.date = (SELECT p.submitted_date FROM northwind.purchase_orders AS p
+										WHERE new.purchase_order_id = p.id)),
 		pd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.payment_date),
+					  WHERE DT.date = (SELECT p.payment_date FROM northwind.purchase_orders AS p
+										WHERE new.purchase_order_id = p.id)),
 		cd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.creation_date),
+					  WHERE DT.date = (SELECT p.creation_date FROM northwind.purchase_orders AS p
+										WHERE new.purchase_order_id = p.id)),
 		ad = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.approved_date),
-        idp = (SELECT OFC.product_id FROM northwind.purchase_orders_details AS OFC
-							WHERE OFC.purchase_order_id = new.id),
-		ide = new.created_by,
-        ids = new.supplier_id;
+					  WHERE DT.date = (SELECT p.approved_date FROM northwind.purchase_orders AS p
+										WHERE new.purchase_order_id = p.id)),
+        idp = new.product_id,
+		ide = (SELECT p.created_by FROM northwind.purchase_orders AS p
+										WHERE new.purchase_order_id = p.id),
+        ids = (SELECT p.supplier_id FROM northwind.purchase_orders AS p
+										WHERE new.purchase_order_id = p.id);
         IF(up is null) THEN SET up = -1.0; 
         END IF;
         IF(sd is null) THEN SET sd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
@@ -256,7 +288,7 @@ FOR EACH ROW
         IF(ide is null) THEN SET ide = 0; 
         END IF;
         
-	INSERT INTO `trabalho-ar`.pre_purchase_facts
-    VALUES(up,qt,sd,pd,cd,ad,idp,ide,ids);
+	INSERT INTO `trabalho-ar`.pre_purchase_facts(unit_cost,quantity,submitted_date,payment_date,created_date,approved_date,id_dim_products,id_dim_employer,id_dim_supplier,operation)
+    VALUES(up,qt,sd,pd,cd,ad,idp,ide,ids,op);
 	END$$
 DELIMITER ;
