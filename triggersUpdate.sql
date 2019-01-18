@@ -169,7 +169,7 @@ FOR EACH ROW
     DECLARE op VARCHAR(50);
     DECLARE up,qt DECIMAL(18,4);
     SET op = 'UPDATE',
-		up= (SELECT OFC.unit_cost FROM northwind.order_details AS OFC
+		up= (SELECT OFC.unit_price FROM northwind.order_details AS OFC
 						WHERE OFC.order_id = new.id),
         qt = (SELECT OFC.quantity FROM northwind.order_details AS OFC
                     WHERE OFC.order_id = new.id),
@@ -219,9 +219,9 @@ FOR EACH ROW
     DECLARE op VARCHAR(50);
     DECLARE up,qt DECIMAL(18,4);
     SET op = 'UPDATE',
-		up= (SELECT OFC.unit_cost FROM northwind.purchase_orders_detais AS OFC
+		up= (SELECT OFC.unit_cost FROM northwind.purchase_orders_details AS OFC
 						WHERE OFC.purchase_order_id = new.id),
-        qt = (SELECT OFC.quantity FROM northwind.purchase_orders_detais AS OFC
+        qt = (SELECT OFC.quantity FROM northwind.purchase_orders_details AS OFC
                     WHERE OFC.purchase_order_id = new.id),
 		sd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
 					  WHERE DT.date = new.submitted_date),
@@ -231,7 +231,7 @@ FOR EACH ROW
 					  WHERE DT.date = new.creation_date),
 		ad = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
 					  WHERE DT.date = new.approved_date),
-        idp = (SELECT OFC.product_id FROM northwind.purchase_orders_detais AS OFC
+        idp = (SELECT OFC.product_id FROM northwind.purchase_orders_details AS OFC
 							WHERE OFC.purchase_order_id = new.id),
 		ide = new.created_by,
         ids = new.supplier_id;

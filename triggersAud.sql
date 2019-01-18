@@ -112,7 +112,7 @@ FOR EACH ROW
 	BEGIN
     DECLARE last_id INT;
     IF(new.operation like 'INSERT') THEN
-		INSERT INTO trabalho.orders_facts
+		INSERT INTO trabalho.orders_fact
 		VALUES(new.idpre_order_facts,new.unit_price,new.quantity,new.order_date,
         new.paid_date,new.shipped_date,new.id_dim_customer,new.id_dim_products,
         new.id_dim_shipper,new.id_dim_employer);

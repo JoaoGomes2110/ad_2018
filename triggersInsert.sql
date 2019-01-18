@@ -161,34 +161,45 @@ DELIMITER ;
 DROP TRIGGER IF EXISTS trigger_insert_orders;
 DELIMITER $$
 CREATE TRIGGER trigger_insert_orders
-AFTER INSERT ON `northwind`.orders
+AFTER INSERT ON `northwind`.order_details
 FOR EACH ROW
 	BEGIN
     DECLARE od,pd,sd,idc,idp,ids,ide INT;
     DECLARE op VARCHAR(50);
     DECLARE up,qt DECIMAL(18,4);
-    DECLARE newDate, last_date DATETIME;
-    SET newDate = (SELECT GREATEST(new.order_date,new.paid_date,new.shipped_date));
-    SET last_date = (SELECT max(data) FROM pre_dim_time);
+    DECLARE newDate, last_date, nod,npd,nsd DATETIME;
+    SET nod = (SELECT O.order_date FROM northwind.orders AS O
+				WHERE new.order_id = O.id);
+	SET npd = (SELECT O.paid_date FROM northwind.orders AS O
+				WHERE new.order_id = O.id);
+	SET nsd = (SELECT O.shipped_date FROM northwind.orders AS O
+				WHERE new.order_id = O.id);
+    SET newDate = (SELECT GREATEST(nod,npd,nsd));
+    SET last_date = (SELECT max(data) FROM `trabalho-ar`.pre_dim_time);
     IF(newDate>last_date) THEN CALL `trabalho-ar`.inc_datas_trigger(newDate,last_date);
     END IF;
     SET op = 'INSERT',
-		up= (SELECT OFC.unit_cost FROM northwind.order_details AS OFC
-						WHERE OFC.order_id = new.id),
-        qt = (SELECT OFC.quantity FROM northwind.order_details AS OFC
-                    WHERE OFC.order_id = new.id),
+		up= new.unit_price,
+        qt = new.quantity,
 		od = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.order_date),
+					  WHERE DT.date = (SELECT O.order_date FROM northwind.orders AS O
+										WHERE new.order_id = O.id)),
 		pd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.paid_date),
+					  WHERE DT.date = (SELECT O.paid_date FROM northwind.orders AS O
+										WHERE new.order_id = O.id)),
 		sd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
-					  WHERE DT.date = new.shipped_date),
-		idc = new.customer_id,
-        idp = (SELECT OFC.product_id FROM northwind.order_details AS OFC
-							WHERE OFC.order_id = new.id),
-		ids = new.shipper_id,
-        ide = new.employee_id;
+					  WHERE DT.date = (SELECT O.shipped_date FROM northwind.orders AS O
+										WHERE new.order_id = O.id)),
+		idc = (SELECT O.customer_id FROM northwind.orders AS O
+										WHERE new.order_id = O.id),
+        idp = new.product_id,
+		ids = (SELECT O.shipper_id FROM northwind.orders AS O
+										WHERE new.order_id = O.id),
+        ide = (SELECT O.employee_id FROM northwind.orders AS O
+										WHERE new.order_id = O.id);
         IF(up is null) THEN SET up = -1.0; 
+        END IF;
+        IF(qt is null) THEN SET up = -1.0; 
         END IF;
         IF(od is null) THEN SET od = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
 										where DT.date = '0000-00-00'); 
@@ -208,8 +219,9 @@ FOR EACH ROW
         IF(ide is null) THEN SET ide = 0; 
         END IF;
         
-	INSERT INTO `trabalho-ar`.pre_order_facts
-    VALUES(up,qt,od,pd,sd,idc,idp,ids,ide);
+	INSERT INTO `trabalho-ar`.pre_order_facts(unit_price,quantity,order_date,paid_date,shipped_date,id_dim_customer,
+    id_dim_products,id_dim_shipper,id_dim_employer,operation)
+    VALUES(up,qt,od,pd,sd,idc,idp,ids,ide,op);
 	END$$
 DELIMITER ;
 
@@ -224,13 +236,13 @@ FOR EACH ROW
     DECLARE up,qt DECIMAL(18,4);
     DECLARE newDate, last_date DATETIME;
     SET newDate = (SELECT GREATEST(new.submitted_date,new.payment_date,new.creation_date,new.approved_date));
-    SET last_date = (SELECT max(data) FROM pre_dim_time);
+    SET last_date = (SELECT max(data) FROM `trabalho-ar`.pre_dim_time);
     IF(newDate>last_date) THEN CALL `trabalho-ar`.inc_datas_trigger(newDate,last_date);
     END IF;
     SET op = 'INSERT',
-		up= (SELECT OFC.unit_cost FROM northwind.purchase_orders_detais AS OFC
+		up= (SELECT OFC.unit_cost FROM northwind.purchase_orders_details AS OFC
 						WHERE OFC.purchase_order_id = new.id),
-        qt = (SELECT OFC.quantity FROM northwind.purchase_orders_detais AS OFC
+        qt = (SELECT OFC.quantity FROM northwind.purchase_orders_details AS OFC
                     WHERE OFC.purchase_order_id = new.id),
 		sd = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
 					  WHERE DT.date = new.submitted_date),
@@ -240,7 +252,7 @@ FOR EACH ROW
 					  WHERE DT.date = new.creation_date),
 		ad = (SELECT DT.id_dim_time FROM trabalho.dim_time AS DT
 					  WHERE DT.date = new.approved_date),
-        idp = (SELECT OFC.product_id FROM northwind.purchase_orders_detais AS OFC
+        idp = (SELECT OFC.product_id FROM northwind.purchase_orders_details AS OFC
 							WHERE OFC.purchase_order_id = new.id),
 		ide = new.created_by,
         ids = new.supplier_id;
@@ -268,31 +280,5 @@ FOR EACH ROW
 	INSERT INTO `trabalho-ar`.pre_purchase_facts
     VALUES(up,qt,sd,pd,cd,ad,idp,ide,ids);
 	END$$
-DELIMITER ;
-
-DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `inc_datas_trigger`(startDate DATETIME, endDate DATETIME)
-BEGIN
-	while @startDate<=@endDate DO
-		SET @m = (SELECT MONTH(@startDate));
-		SET @ano = (SELECT YEAR(@startDate));
-		SET @mes = concat(@m,"-",@ano);
-		SET @dia = dayname(@startDate);
-		select 
-		CASE WHEN MONTH(@startDate) IN (3,4,5) THEN "SPRING"
-			WHEN MONTH(@startDate) IN (6,7,8) THEN "SUMMER"
-			WHEN MONTH(@startDate) IN (9,10,11) THEN "AUTUMN"
-			ELSE "WINTER"
-			END
-		INTO @est;
-		INSERT INTO `trabalho-ar`.pre_dim_time(mes,ano,data,`dia_da_semana`,estacao)
-		VALUES(@mes,@ano,@startDate,@dia,@est);
-		
-		SET @startDate = DATE_ADD(@startDate, INTERVAL 1 DAY);
-	END WHILE;
-
-	INSERT INTO `trabalho-ar`.pre_dim_time(mes,ano,data,`dia_da_semana`,estacao)
-	VALUES(@mes,@ano,@startDate,@dia,@est);
-END$$
 DELIMITER ;
 

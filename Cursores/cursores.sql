@@ -1,3 +1,4 @@
+USE `trabalho-ar`;
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `a_curCustomer`()
 begin
